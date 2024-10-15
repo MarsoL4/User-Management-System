@@ -195,7 +195,7 @@ def programa_principal() -> None:
                             else:
                                 print("Opção inválida.")
                     else:
-                        print("\nRegistro não encontrado. Vamos cadastrar um novo.")
+                        print("\nRegistro não encontrado. Vamos cadastrar um novo")
                         adicionar_registro(conn)
             except ValueError:
                 print("ID inválido. Deve ser um número.")
