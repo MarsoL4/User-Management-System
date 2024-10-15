@@ -28,7 +28,7 @@ Este repositório contém um sistema de gerenciamento de usuários que interage 
 
 3. Configure as credenciais de acesso ao banco de dados no arquivo
    ```python
-   conn = oracledb.connect(user="SEU_USUARIO", password="SUA_SENHA", dsn="oracle.fiap.com.br:1521/ORCL")
+   conn = oracledb.connect(conn = oracledb.connect(user="SEU_USUARIO", password="SUA_SENHA", dsn="SEU_HOST_NAME:SUA_PORTA/SEU_SID")
 
 4. Execute o Programa
    ```python
