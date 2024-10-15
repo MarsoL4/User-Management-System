@@ -31,4 +31,3 @@ Este repositório contém um sistema de gerenciamento de usuários que interage 
    conn = oracledb.connect(conn = oracledb.connect(user="SEU_USUARIO", password="SUA_SENHA", dsn="SEU_HOST_NAME:SUA_PORTA/SEU_SID")
 
 4. Execute o Programa
-   ```python
