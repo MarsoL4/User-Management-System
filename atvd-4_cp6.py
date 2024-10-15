@@ -51,3 +51,97 @@ def adicionar_registro(conn: oracledb.Connection) -> None:
     except oracledb.DatabaseError as e:
         print(f"Erro ao inserir dados: {e}")
 
+# Edita um registro existente
+def editar_registro(conn: oracledb.Connection, id_atual: int) -> None:
+    print("Digite os novos valores ou pressione Enter para manter os antigos.")
+    
+    novo_nome = input(f"\nNome atual: ") or None
+    nova_idade = input(f"\nIdade atual: ")
+    nova_cidade = input(f"\nCidade atual: ") or None
+    nova_profissao = input(f"\nProfissão atual: ") or None
+
+    updates = []
+    valores = []
+    
+    if novo_nome:
+        updates.append("Nome = :1")
+        valores.append(novo_nome)
+    if nova_idade:
+        try:
+            nova_idade = int(nova_idade)
+            updates.append("Idade = :2")
+            valores.append(nova_idade)
+        except ValueError:
+            print("Idade inválida. Deve ser um número.")
+            return
+    if nova_cidade:
+        updates.append("Cidade = :3")
+        valores.append(nova_cidade)
+    if nova_profissao:
+        updates.append("Profissao = :4")
+        valores.append(nova_profissao)
+
+    if updates:
+        try:
+            with conn.cursor() as inst_cadastro:
+                editar = f"UPDATE TBL_USUARIOS SET {', '.join(updates)} WHERE ID = :5"
+                inst_cadastro.execute(editar, valores + [id_atual])
+                conn.commit()
+                print("\nRegistro atualizado com sucesso!")
+                print("-" * 70)
+        except oracledb.DatabaseError as e:
+            print(f"Erro ao atualizar registro: {e}")
+
+# Exclui um registro
+def excluir_registro(conn: oracledb.Connection, id_atual: int) -> None:
+    try:
+        with conn.cursor() as inst_cadastro:
+            excluir = "DELETE FROM TBL_USUARIOS WHERE ID = :1"
+            inst_cadastro.execute(excluir, [id_atual])
+            conn.commit()
+            print("\nRegistro excluído com sucesso!")
+    except oracledb.DatabaseError as e:
+        print(f"Erro ao excluir registro: {e}")
+
+# Função para listar todos os registros
+def listar_registros(conn: oracledb.Connection) -> None:
+    try:
+        with conn.cursor() as inst_cadastro:
+            inst_cadastro.execute("SELECT * FROM TBL_USUARIOS")
+            registros = inst_cadastro.fetchall()
+
+            if not registros:
+                print("\nNenhum registro cadastrado.")
+            else:
+                for registro in registros:
+                    print(registro)
+            print("_" * 70)
+            input("\nENTER para continuar...")
+    except oracledb.DatabaseError as e:
+        print(f"Erro ao listar registros: {e}")
+
+# Função para listar registros e fazer análise com Pandas
+def listar_registros_com_pandas(conn: oracledb.Connection) -> None:
+    try:
+        with conn.cursor() as inst_cadastro:
+            inst_cadastro.execute("SELECT * FROM TBL_USUARIOS")
+            registros = inst_cadastro.fetchall()
+
+            if not registros:
+                print("\nNenhum registro cadastrado.")
+            else:
+                df = pd.DataFrame(registros, columns=['ID', 'Nome', 'Idade', 'Cidade', 'Profissao'])
+                print(df)
+                print("_" * 70)
+
+                # Exibe média de idades e mostra gráfico
+                media_idade = df['Idade'].mean()
+                print(f"\nMédia de idade dos usuários: {media_idade:.2f}")
+                df['Idade'].plot(kind='hist', title="Distribuição de Idades", color='blue')
+                plt.xlabel('Idade')
+                plt.ylabel('Frequência')
+                plt.show()
+
+                input("\nENTER para continuar...")
+    except oracledb.DatabaseError as e:
+        print(f"Erro ao listar registros: {e}")
