@@ -145,3 +145,69 @@ def listar_registros_com_pandas(conn: oracledb.Connection) -> None:
                 input("\nENTER para continuar...")
     except oracledb.DatabaseError as e:
         print(f"Erro ao listar registros: {e}")
+
+# Função para exibir detalhes de um registro
+def exibir_detalhes_registro(registro) -> None:
+    print("\nDetalhes do Registro:")
+    print(f"ID: {registro[0]}")
+    print(f"Nome: {registro[1]}")
+    print(f"Idade: {registro[2]}")
+    print(f"Cidade: {registro[3]}")
+    print(f"Profissão: {registro[4]}")
+    print("_" * 70)
+
+# Programa principal que executa as operações
+def programa_principal() -> None:
+    conn = conectar_bd()
+    if conn is None:
+        return  # Se a conexão falhar, encerra o programa
+
+    while True:
+        os.system('cls' if os.name == 'nt' else 'clear')
+        pk = input("Digite a chave primária (ID), 'L' para listar registros, 'A' para análise de dados ou 0 para sair: ")
+
+        if pk.lower() == 'l':
+            listar_registros(conn)
+        elif pk.lower() == 'a':
+            listar_registros_com_pandas(conn)
+        elif pk == '0':
+            break
+        else:
+            try:
+                pk = int(pk)
+                with conn.cursor() as inst_cadastro:
+                    inst_cadastro.execute("SELECT * FROM TBL_USUARIOS WHERE ID = :1", [pk])
+                    registro = inst_cadastro.fetchone()
+
+                    if registro:
+                        exibir_detalhes_registro(registro)
+
+                        while True:
+                            opcao = input("\nDeseja Editar (E), Excluir (X), ou Sair (0)? ").lower()
+                            if opcao == 'e':
+                                editar_registro(conn, pk)
+                                break
+                            elif opcao == 'x':
+                                excluir_registro(conn, pk)
+                                break
+                            elif opcao == '0':
+                                break
+                            else:
+                                print("Opção inválida.")
+                    else:
+                        print("\nRegistro não encontrado. Vamos cadastrar um novo.")
+                        adicionar_registro(conn)
+            except ValueError:
+                print("ID inválido. Deve ser um número.")
+            except oracledb.DatabaseError as e:
+                print(f"Erro ao consultar registro: {e}")
+
+        continuar = input("\nDeseja realizar outra operação? (S/N): ").lower()
+        if continuar != 's':
+            break
+
+    conn.close()
+    print("Conexão fechada.")
+
+# Execução do Programa
+programa_principal()
