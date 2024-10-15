@@ -12,15 +12,14 @@ import matplotlib.pyplot as plt
 # Cria conexão com o banco de dados
 def conectar_bd() -> oracledb.Connection:
     try:
-        conn = oracledb.connect(conn = oracledb.connect(user="SEU_USUARIO", password="SUA_SENHA", dsn="SEU_HOST_NAME:SUA_PORTA/SEU_SID")
-)
+        conn = oracledb.connect(user="RM556310", password="130206", dsn="oracle.fiap.com.br:1521/ORCL")
         print("Conexão aberta com sucesso!")
         return conn
     except oracledb.DatabaseError as e:
         print(f"Erro de conexão: {e}")
         return None
 
-# Adiciona novo registro no banco de dados
+# Adiciona novo registro no banco de dados (agora inclui o campo ATIVO)
 def adicionar_registro(conn: oracledb.Connection) -> None:
     print("-" * 70)
     
@@ -44,9 +43,9 @@ def adicionar_registro(conn: oracledb.Connection) -> None:
     try:
         with conn.cursor() as inst_cadastro:
             cadastro = """
-            INSERT INTO TBL_USUARIOS (ID, Nome, Idade, Cidade, Profissao) 
-            VALUES (:1, :2, :3, :4, :5)"""
-            inst_cadastro.execute(cadastro, [novo_id, nome, idade, cidade, profissao])
+            INSERT INTO TBL_USUARIOS (ID, Nome, Idade, Cidade, Profissao, ATIVO) 
+            VALUES (:1, :2, :3, :4, :5, :6)"""
+            inst_cadastro.execute(cadastro, [novo_id, nome, idade, cidade, profissao, True])
             conn.commit()
             print("\nDados inseridos na tabela com sucesso!")
     except oracledb.DatabaseError as e:
@@ -93,26 +92,33 @@ def editar_registro(conn: oracledb.Connection, id_atual: int) -> None:
         except oracledb.DatabaseError as e:
             print(f"Erro ao atualizar registro: {e}")
 
-# Exclui um registro
-def excluir_registro(conn: oracledb.Connection, id_atual: int) -> None:
+# Simula a exclusão de um registro (exclusão lógica: ATIVO = False)
+def excluir_registro_logico(conn: oracledb.Connection, id_atual: int) -> None:
     try:
         with conn.cursor() as inst_cadastro:
-            excluir = "DELETE FROM TBL_USUARIOS WHERE ID = :1"
-            inst_cadastro.execute(excluir, [id_atual])
+            excluir = "UPDATE TBL_USUARIOS SET ATIVO = :1 WHERE ID = :2"
+            inst_cadastro.execute(excluir, [False, id_atual])
             conn.commit()
-            print("\nRegistro excluído com sucesso!")
+            print("\nRegistro desativado (exclusão lógica) com sucesso!")
     except oracledb.DatabaseError as e:
-        print(f"Erro ao excluir registro: {e}")
+        print(f"Erro ao desativar registro: {e}")
 
-# Função para listar todos os registros
-def listar_registros(conn: oracledb.Connection) -> None:
+# Função para listar registros (ativados, desativados ou todos)
+def listar_registros(conn: oracledb.Connection, filtro_ativo=None) -> None:
     try:
+        query = "SELECT ID, Nome, Idade, Cidade, Profissao, ATIVO FROM TBL_USUARIOS"
+        params = []
+        
+        if filtro_ativo is not None:
+            query += " WHERE ATIVO = :1"
+            params.append(filtro_ativo)
+
         with conn.cursor() as inst_cadastro:
-            inst_cadastro.execute("SELECT * FROM TBL_USUARIOS")
+            inst_cadastro.execute(query, params)
             registros = inst_cadastro.fetchall()
 
             if not registros:
-                print("\nNenhum registro cadastrado.")
+                print("\nNenhum registro encontrado.")
             else:
                 for registro in registros:
                     print(registro)
@@ -120,32 +126,43 @@ def listar_registros(conn: oracledb.Connection) -> None:
             input("\nENTER para continuar...")
     except oracledb.DatabaseError as e:
         print(f"Erro ao listar registros: {e}")
-
+        
 # Função para listar registros e fazer análise com Pandas
 def listar_registros_com_pandas(conn: oracledb.Connection) -> None:
     try:
         with conn.cursor() as inst_cadastro:
             inst_cadastro.execute("SELECT * FROM TBL_USUARIOS")
             registros = inst_cadastro.fetchall()
+            
+            # Criar DataFrame com a coluna 'ATIVO'
+            df = pd.DataFrame(registros, columns=['ID', 'Nome', 'Idade', 'Cidade', 'Profissao', 'ATIVO'])
 
-            if not registros:
-                print("\nNenhum registro cadastrado.")
-            else:
-                df = pd.DataFrame(registros, columns=['ID', 'Nome', 'Idade', 'Cidade', 'Profissao'])
-                print(df)
-                print("_" * 70)
+            # Exibir o DataFrame
+            print(df)
+            print("_" * 70)
 
-                # Exibe média de idades e mostra gráfico
+            # Calcular e exibir a média de idade
+            if not df.empty:
                 media_idade = df['Idade'].mean()
-                print(f"\nMédia de idade dos usuários: {media_idade:.2f}")
-                df['Idade'].plot(kind='hist', title="Distribuição de Idades", color='blue')
-                plt.xlabel('Idade')
-                plt.ylabel('Frequência')
+                print(f"Média de Idade: {media_idade:.2f}")
+                print(f"Número de Registros: {len(df)}")
+                
+                # Plotar gráfico de idades
+                plt.figure(figsize=(10, 6))
+                plt.bar(df['Nome'], df['Idade'], color='skyblue')
+                plt.axhline(y=media_idade, color='r', linestyle='--', label=f'Média de Idade: {media_idade:.2f}')
+                plt.title('Idade dos Usuários')
+                plt.xlabel('Nome')
+                plt.ylabel('Idade')
+                plt.xticks(rotation=45)
+                plt.legend()
+                plt.tight_layout()
                 plt.show()
 
-                input("\nENTER para continuar...")
+            input("\nENTER para continuar...")
     except oracledb.DatabaseError as e:
         print(f"Erro ao listar registros: {e}")
+
 
 # Função para exibir detalhes de um registro
 def exibir_detalhes_registro(registro) -> None:
@@ -155,6 +172,7 @@ def exibir_detalhes_registro(registro) -> None:
     print(f"Idade: {registro[2]}")
     print(f"Cidade: {registro[3]}")
     print(f"Profissão: {registro[4]}")
+    print(f"ATIVO: {registro[5]}")
     print("_" * 70)
 
 # Programa principal que executa as operações
@@ -168,7 +186,13 @@ def programa_principal() -> None:
         pk = input("Digite a chave primária (ID), 'L' para listar registros, 'A' para análise de dados ou 0 para sair: ")
 
         if pk.lower() == 'l':
-            listar_registros(conn)
+            tipo_listagem = input("Listar (A)tivados, (D)esativados ou (T)odos? ").lower()
+            if tipo_listagem == 'a':
+                listar_registros(conn, True)
+            elif tipo_listagem == 'd':
+                listar_registros(conn, False)
+            else:
+                listar_registros(conn)
         elif pk.lower() == 'a':
             listar_registros_com_pandas(conn)
         elif pk == '0':
@@ -177,19 +201,19 @@ def programa_principal() -> None:
             try:
                 pk = int(pk)
                 with conn.cursor() as inst_cadastro:
-                    inst_cadastro.execute("SELECT * FROM TBL_USUARIOS WHERE ID = :1", [pk])
+                    inst_cadastro.execute("SELECT ID, Nome, Idade, Cidade, Profissao, ATIVO FROM TBL_USUARIOS WHERE ID = :1", [pk])
                     registro = inst_cadastro.fetchone()
 
                     if registro:
                         exibir_detalhes_registro(registro)
 
                         while True:
-                            opcao = input("\nDeseja Editar (E), Excluir (X), ou Sair (0)? ").lower()
+                            opcao = input("\nDeseja Editar (E), Desativar (X), ou Sair (0)? ").lower()
                             if opcao == 'e':
                                 editar_registro(conn, pk)
                                 break
                             elif opcao == 'x':
-                                excluir_registro(conn, pk)
+                                excluir_registro_logico(conn, pk)
                                 break
                             elif opcao == '0':
                                 break
