@@ -1,7 +1,3 @@
-# Enzo Giuseppe Marsola 556310
-# Renan Dorneles Boucault 557820
-# Cauan da Cruz Ferreira 558238
-
 # Imports ----------------------------
 import os
 import oracledb
