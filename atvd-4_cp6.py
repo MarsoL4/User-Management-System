@@ -12,7 +12,8 @@ import matplotlib.pyplot as plt
 # Cria conexão com o banco de dados
 def conectar_bd() -> oracledb.Connection:
     try:
-        conn = oracledb.connect(user="RM556310", password="130206", dsn="oracle.fiap.com.br:1521/ORCL")
+        conn = oracledb.connect(conn = oracledb.connect(user="SEU_USUARIO", password="SUA_SENHA", dsn="SEU_HOST_NAME:SUA_PORTA/SEU_SID")
+)
         print("Conexão aberta com sucesso!")
         return conn
     except oracledb.DatabaseError as e:
