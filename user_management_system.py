@@ -1,7 +1,3 @@
-# Enzo Giuseppe Marsola 556310
-# Renan Dorneles Boucault 557820
-# Cauan da Cruz Ferreira 558238
-
 # Imports ----------------------------
 import os
 import oracledb
@@ -12,14 +8,14 @@ import matplotlib.pyplot as plt
 # Cria conexão com o banco de dados
 def conectar_bd() -> oracledb.Connection:
     try:
-        conn = oracledb.connect(user="RM556310", password="130206", dsn="oracle.fiap.com.br:1521/ORCL")
+        conn = oracledb.connect(user="SEU_USUARIO", password="SUA_SENHA", dsn="SEU_HOST_NAME:SUA_PORTA/SEU_SID")
         print("Conexão aberta com sucesso!")
         return conn
     except oracledb.DatabaseError as e:
         print(f"Erro de conexão: {e}")
         return None
 
-# Adiciona novo registro no banco de dados (agora inclui o campo ATIVO, Salario e Nascimento)
+# Adiciona novo registro no banco de dados
 def adicionar_registro(conn: oracledb.Connection) -> None:
     print("-" * 70)
     
@@ -59,7 +55,7 @@ def adicionar_registro(conn: oracledb.Connection) -> None:
     except oracledb.DatabaseError as e:
         print(f"Erro ao inserir dados: {e}")
 
-# Edita um registro existente (incluindo Salário e Nascimento)
+# Edita um registro existente
 def editar_registro(conn: oracledb.Connection, id_atual: int) -> None:
     print("Digite os novos valores ou pressione Enter para manter os antigos.")
     
