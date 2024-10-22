@@ -109,7 +109,7 @@ def editar_registro(conn: oracledb.Connection, id_atual: int) -> None:
         except oracledb.DatabaseError as e:
             print(f"Erro ao atualizar registro: {e}")
 
-# Simula a exclusão de um registro (exclusão lógica: ATIVO = False)
+# Simula a exclusão de um registro
 def excluir_registro_logico(conn: oracledb.Connection, id_atual: int) -> None:
     try:
         with conn.cursor() as inst_cadastro:
@@ -120,7 +120,7 @@ def excluir_registro_logico(conn: oracledb.Connection, id_atual: int) -> None:
     except oracledb.DatabaseError as e:
         print(f"Erro ao desativar registro: {e}")
 
-# Função para listar registros (ativados, desativados ou todos)
+# Função para listar registros
 def listar_registros(conn: oracledb.Connection, filtro_ativo=None) -> None:
     try:
         query = "SELECT ID, Nome, Idade, Cidade, Profissao, Salario, Nascimento, ATIVO FROM TBL_USUARIOS"
@@ -151,7 +151,6 @@ def listar_registros_com_pandas(conn: oracledb.Connection) -> None:
             inst_cadastro.execute("SELECT * FROM TBL_USUARIOS")
             registros = inst_cadastro.fetchall()
             
-            # Criar DataFrame com a coluna 'ATIVO'
             df = pd.DataFrame(registros, columns=['ID', 'Nome', 'Idade', 'Cidade', 'Profissao', 'Salario', 'Nascimento', 'ATIVO'])
 
             # Exibir o DataFrame
